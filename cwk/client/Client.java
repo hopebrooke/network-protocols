@@ -1,37 +1,7 @@
-/*
- * Copyright (c) 1995 - 2008 Sun Microsystems, Inc.  All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *   - Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
- *   - Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in the
- *     documentation and/or other materials provided with the distribution.
- *
- *   - Neither the name of Sun Microsystems nor the names of its
- *     contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
- * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
 import java.io.*;
 import java.net.*;
 import java.util.*;
+
 
 public class Client {
 
@@ -39,85 +9,67 @@ public class Client {
 	private PrintWriter socketOutput = null;
 	private BufferedReader socketInput = null;
 
-	public void runAuction(String[] args) {
-
-		try {
+    // Initialise Client
+    public Client() {
+        try {
 			// Try and create the socket.
-			socket = new Socket( "localhost", 6001 );
-
-			// Chain a writing stream
+			socket = new Socket("localhost", 6001);
+			// Chain a writing and reading stream
 			socketOutput = new PrintWriter(socket.getOutputStream(), true);
-
-			// Chain a reading stream
 			socketInput = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-		}
-		catch (UnknownHostException e) {
+		} catch (UnknownHostException e) {
 			System.err.println("Don't know about host.\n");
 			System.exit(1);
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			System.err.println("Couldn't get I/O for the connection to host.\n");
 			System.exit(1);
 		}
+    }
 
-		// Chain a reader from the keyboard.
-		// BufferedReader stdIn = new BufferedReader(
-		//											 new InputStreamReader(System.in) );
+    // Method to run auction service
+    // Takes command line arguments as parameter
+	public void runAuction(String[] args) {
+
 		String fromServer;
-
-		//String fromUser;
-
-
+        
 		try { 
 			// Send input to server as string
 			String argsAsString = Arrays.toString(args);
 			// Remove brackets
-			socketOutput.println( argsAsString.substring(1, argsAsString.length()-1) );
-
+			socketOutput.println(argsAsString.substring(1, argsAsString.length()-1) );
+            
+            // Read output from server
 			fromServer = socketInput.readLine();
+            // Print to terminal for client
 			System.out.println(fromServer);
 
-			while( (fromServer=socketInput.readLine())!=null ) {
+            // If client has asked to show table then it will be multiple lines
+            // so keep reading in from server while there are lines to read
+			while((fromServer=socketInput.readLine())!=null) {
 				// Echo server string.
-				System.out.println( fromServer );
+				System.out.println(fromServer);
 			}
 
-
-			// 	if( fromServer.equals("Bye.") ) break;
-
-			// 	// Client types in response
-			// 	fromUser = stdIn.readLine();
-			// 	if( fromUser!=null ) {
-			// 		// Echo client string.
-			// 		System.out.println( "Client: " + fromUser );
-
-			// 		// Write to server.
-			// 		socketOutput.println(fromUser);
-			// 	}
-			// }
-			
+            // Free up resources
 			socketOutput.close();
 			socketInput.close();
-			// stdIn.close();
 			socket.close();
-		}	catch (IOException e) {
+
+		} catch (IOException e) {
 			System.err.println("I/O exception during execution\n");
 			System.exit(1);
 		}
 	}
 
 	public static void main(String[] args) {
-		
 		// Check for correct num of arguments
 		if( (args.length < 1) || (args.length > 3) ){
 			System.out.println( "Arguments should be of the form: 'show', 'item <string>' or 'bid <item> <value>'.");
 			return;
 		}
-
 		// Initialise and run client
 		Client client = new Client();
 		client.runAuction(args);
 	}
-
 }
